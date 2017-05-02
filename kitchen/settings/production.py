@@ -23,11 +23,11 @@ MEDIA_URL = '/media/'
 
 SERVER_EMAIL = 'mnmjunkbox@gmail.com'
 
-EMAIL_HOST = 'smtp.sendgrid.net'
-EMAIL_HOST_USER = config('SENDGRID_USERNAME')
-EMAIL_HOST_PASSWORD = config('SENDGRID_PASSWORD')
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
+# EMAIL_HOST = 'smtp.sendgrid.net'
+# EMAIL_HOST_USER = config('SENDGRID_USERNAME')
+# EMAIL_HOST_PASSWORD = config('SENDGRID_PASSWORD')
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
 
 # Security
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -45,10 +45,10 @@ CSRF_COOKIE_HTTPONLY = True
 # Webpack
 WEBPACK_LOADER['DEFAULT']['CACHE'] = True
 
-# Celery
-CELERY_BROKER_URL = config('REDIS_URL')
-CELERY_RESULT_BACKEND = config('REDIS_URL')
-CELERY_SEND_TASK_ERROR_EMAILS = True
+# # Celery
+# CELERY_BROKER_URL = config('REDIS_URL')
+# CELERY_RESULT_BACKEND = config('REDIS_URL')
+# CELERY_SEND_TASK_ERROR_EMAILS = True
 
 # Whitenoise
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
@@ -63,10 +63,10 @@ MIDDLEWARE.insert(  # insert RequestIDMiddleware on the top
 LOG_REQUEST_ID_HEADER = 'HTTP_X_REQUEST_ID'
 LOG_REQUESTS = True
 
-# Opbeat
-INSTALLED_APPS += ['opbeat.contrib.django']
-MIDDLEWARE.insert(  # insert OpbeatAPMMiddleware on the top
-    0, 'opbeat.contrib.django.middleware.OpbeatAPMMiddleware')
+# # Opbeat
+# INSTALLED_APPS += ['opbeat.contrib.django']
+# MIDDLEWARE.insert(  # insert OpbeatAPMMiddleware on the top
+#     0, 'opbeat.contrib.django.middleware.OpbeatAPMMiddleware')
 
 LOGGING = {
     'version': 1,
