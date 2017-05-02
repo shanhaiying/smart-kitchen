@@ -42,7 +42,7 @@ INSTALLED_APPS = [
 
     'common',
     'users',
-    'exampleapp',
+    'mainapp',
     'kitchen',
     'djcelery',
 ]
