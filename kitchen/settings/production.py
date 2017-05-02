@@ -45,10 +45,10 @@ CSRF_COOKIE_HTTPONLY = True
 # Webpack
 WEBPACK_LOADER['DEFAULT']['CACHE'] = True
 
-# # Celery
-# CELERY_BROKER_URL = config('REDIS_URL')
-# CELERY_RESULT_BACKEND = config('REDIS_URL')
-# CELERY_SEND_TASK_ERROR_EMAILS = True
+# Celery
+CELERY_BROKER_URL = config('REDIS_URL')
+CELERY_RESULT_BACKEND = config('REDIS_URL')
+CELERY_SEND_TASK_ERROR_EMAILS = True
 
 # Whitenoise
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'users',
     'exampleapp',
     'kitchen',
+    'djcelery',
 ]
 
 MIDDLEWARE = [
@@ -122,6 +123,14 @@ WEBPACK_LOADER = {
 }
 
 # Celery
+import djcelery
+djcelery.setup_loader()
+
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+BROKER_POOL_LIMIT = 1
+CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
+BROKER_URL = os.environ.get("REDISCLOUD_URL", "django://")
+if BROKER_URL == "django://":
+    INSTALLED_APPS += ("kombu.transport.django",)

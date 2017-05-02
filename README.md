@@ -1,16 +1,7 @@
-# Smart Kitchen
+# Kitchen Smart
 
-### How to test Heroku deployment
-
-Push your changes to a branch and visit `https://dashboard.heroku.com/new?template=https://github.com/fill-org-or-user/fill-project-repo-name/tree/fill-branch` (replace all `fill`).
-
-### How to add a 'Deploy to Heroku' button
-
-Read [this](https://devcenter.heroku.com/articles/heroku-button#adding-the-heroku-button).
-
-p.s. if you want to deploy in a different way please take a look the `app.json` file for what needs to be configured.
-
-## Developing
+### About
+TODO
 
 ### Quickstart
 
@@ -29,6 +20,7 @@ p.s. if you want to deploy in a different way please take a look the `app.json` 
 - `npm install`
 - `make bundle`
 - `python manage.py runserver`
+- `python manage.py celery worker --beat --loglevel=info`
 
 ### Testing
 
@@ -37,10 +29,6 @@ p.s. if you want to deploy in a different way please take a look the `app.json` 
 Will run django tests using `--keepdb` and `--parallel`. You may pass a path to the desired test module in the make command. E.g.:
 
 `make test someapp.tests.test_views`
-
-### Adding new pypi libs
-
-Add high level dependecies to `requirements-to-freeze.txt` and `pip freeze > requirements.txt`. This is [A Better Pip Workflow](http://www.kennethreitz.org/essays/a-better-pip-workflow).
 
 ## Checking lint
 
@@ -51,6 +39,3 @@ Add high level dependecies to `requirements-to-freeze.txt` and `pip freeze > req
 
 - Run `pre-commit install` to enable the hook into your git repo. The hook will run automatically for each commit.
 - Run `git commit -m "Your message" -n` to skip the hook if you need.
-
-## Commercial Support
-This project, as other Vinta open-source projects, is used in products of Vinta clients. We are always looking for exciting work, so if you need any commercial support, feel free to get in touch: contact@vinta.com.br
