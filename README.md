@@ -1,9 +1,5 @@
 # Smart Kitchen
 
-### How to test `django-admin startproject`
-
-If you made changes to this boilerplate and want to test them, commit your changes and use `git archive -o boilerplate.zip HEAD` to create the template zip.
-
 ### How to test Heroku deployment
 
 Push your changes to a branch and visit `https://dashboard.heroku.com/new?template=https://github.com/fill-org-or-user/fill-project-repo-name/tree/fill-branch` (replace all `fill`).
@@ -18,8 +14,8 @@ p.s. if you want to deploy in a different way please take a look the `app.json` 
 
 ### Quickstart
 
-- Create a copy of ``{{project_name}}/settings/local.py.example`` in ``{{project_name}}/settings/local.py``
-- Create a ``.env`` file in the root of the project and add ``DJANGO_SETTINGS_MODULE="{{project_name}}.settings.local"`` to it
+- Create a copy of ``kitchen/settings/local.py.example`` in ``kitchen/settings/local.py``
+- Create a ``.env`` file in the root of the project and add ``DJANGO_SETTINGS_MODULE="kitchen.settings.local"`` to it
 - Create the migrations for `users` app: `python manage.py makemigrations`
 - Run the migrations: `python manage.py migrate`
 

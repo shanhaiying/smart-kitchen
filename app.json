@@ -38,22 +38,6 @@
         "version": "9.5"
       },
       "as": "DATABASE"
-    },
-    {
-      "plan": "heroku-redis:hobby-dev",
-      "options": {
-        "version": "3.2"
-      },
-      "as": "REDIS"
-    },
-    {
-      "plan": "sendgrid:starter"
-    },
-    {
-      "plan": "papertrail:choklad"
-    },
-    {
-      "plan": "opbeat:test"
     }
   ],
   "buildpacks": [
