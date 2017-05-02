@@ -3,6 +3,7 @@
 # app
 Django
 celery[redis]
+django-celery
 django-model-utils
 django-webpack-loader
 django.js-vinta
