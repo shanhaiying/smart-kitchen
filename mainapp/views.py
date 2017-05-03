@@ -2,6 +2,7 @@ import simplejson as json
 
 from django.shortcuts import render  # noqa
 from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseBadRequest, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 def pong(request):
     print('PING')
@@ -30,6 +31,7 @@ def login(request):
         return HttpResponseBadRequest()
 
 
+@csrf_exempt
 def echo(request):
     j = {'type': request.method}
     if request.method == 'GET':
