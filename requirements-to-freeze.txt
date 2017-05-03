@@ -32,3 +32,8 @@ fixmydjango
 ipython
 model-mommy
 pre-commit
+
+# utils
+python-dateutil
+pandas
+simplejson
