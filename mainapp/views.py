@@ -37,6 +37,6 @@ def echo(request):
     if request.method == 'GET':
         j['query'] = dict(request.GET)
     elif request.method == 'POST':
-        j['query'] = dict(request.POST)
+        j['form'] = dict(request.POST)
 
     return JsonResponse(j)
