@@ -15,6 +15,7 @@ SoftwareSerial xbee(XBEE_RX, XBEE_TX);
 
 const byte BLE_RX = 4;
 const byte BLE_TX = 5;
+SoftwareSerial scanner(BLE_RX, BLE_TX);
 
 // Phant globals.
 const String destIP = "54.86.132.254";     // data.sparkfun.com's IP address

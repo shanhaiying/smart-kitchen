@@ -143,7 +143,7 @@ void send_advertisement() {
 
   ble.accumulateAdvertisingPayload(GapAdvertisingData::BREDR_NOT_SUPPORTED
                                    | GapAdvertisingData::LE_GENERAL_DISCOVERABLE);
-  ble.setAdvertisingType(GapAdvertisingParams::ADV_NON_CONNECTABLE_UNDIRECTED);
+  ble.setAdvertisingType(GapAdvertisingParams::ADV_CONNECTABLE_UNDIRECTED);
   // NOTE: we can use ADV_NON_CONNECTABLE_UNDIRECTED but then iPhone testing app wont work with it
 
   // TODO - read the sensors...?
@@ -153,8 +153,8 @@ void send_advertisement() {
                                    (const uint8_t*) AdvData,
                                    sizeof(AdvData));
 
-  ble.setTxPower(4);
-  ble.setDeviceName((const uint8_t *)(DEVICE_NAME));
+  // ble.setTxPower(4);
+  ble.setDeviceName((const uint8_t *) DEVICE_NAME);
   ble.setAdvertisingInterval(ADVERTISEMENT_INTERVAL);
   ble.startAdvertising();
 }

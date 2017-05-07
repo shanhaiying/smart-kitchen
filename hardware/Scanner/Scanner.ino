@@ -11,6 +11,7 @@ typedef enum board_t {FRIDGE, OVEN};
 static const uint8_t NUM_SENSORS[] = {3, 1};
 // NOTE: NUM_SENSORS is mapped by board_t
 
+static const uint MAX_SENSORS = 10;
 static const uint NUM_BYTES = 26;
 static const uint START_INDEX = 5;
 static const uint8_t HASH[] = {69,1,255,1,69}; 
@@ -20,7 +21,7 @@ struct {
   bool valid;
   uint8_t board_type;
   uint8_t board_uuid;
-  uint8_t sensors[10];
+  uint8_t sensors[MAX_SENSORS];
   uint num_sensors;
   uint8_t batt;
 } data;
@@ -68,6 +69,32 @@ void printData() {
   Serial.println();
 }
 
+void padAndPrint(const String s) {
+  Serial.print(0xFF);
+  Serial.print(0xFF);
+  Serial.print(0x00);
+  Serial.print(0x00);
+  Serial.print(s);
+  Serial.print(0x00);
+  Serial.print(0x00);
+  Serial.print(0xFF);
+  Serial.print(0xFF);
+}
+
+void serializeData() {
+  if (!data.valid)
+    return;
+
+  padAndPrint("BEGIN");
+  Serial.print(data.board_type);
+  Serial.print(data.board_uuid);
+  for (size_t i = 0; i < data.num_sensors; i++) {
+    Serial.print(data.sensors[i]);
+  }
+  Serial.print(data.batt);  
+  padAndPrint("FINISH");
+}
+
 bool valid(int checksum) {
   uint8_t sum = 0;
   for (size_t i = 0; i < HASH_LEN; i++) {
@@ -76,6 +103,7 @@ bool valid(int checksum) {
   sum *= 2;  // there are two hashes per packet
   sum += data.board_type;
   sum += data.board_uuid;
+  sum += data.batt;
   for (size_t i = 0; i < data.num_sensors; i++) {
     sum += data.sensors[i];
   }
@@ -98,7 +126,7 @@ void scanCallback(const Gap::AdvertisementCallbackParams_t *params) {
   uint8_t len;
   uint8_t adv_name[31];
 
-  if (params->type != GapAdvertisingParams::ADV_NON_CONNECTABLE_UNDIRECTED)
+  if (params->type != GapAdvertisingParams::ADV_CONNECTABLE_UNDIRECTED)
     return;
   if (NRF_SUCCESS != ble_advdata_decode(BLE_GAP_AD_TYPE_MANUFACTURER_SPECIFIC_DATA,
                                          params->advertisingDataLen,
