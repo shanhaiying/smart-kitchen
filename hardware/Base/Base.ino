@@ -1,9 +1,13 @@
 #include <SoftwareSerial.h>
 #include <Phant.h>
 
+#define DEBUG FALSE
+
 typedef unsigned int uint;
 
-#define DEBUG FALSE
+////////////// PER USER /////////////////
+static const uint8_t UUID = 23;
+/////////////////////////////////////////
 
 const int COMMAND_TIMEOUT = 3000;  // ms
 const int STARTUP_DELAY = 5000;
@@ -26,9 +30,10 @@ const String privateKey = "RnB7GnXWG6S0ZkAwDM8B";
 Phant phant("data.sparkfun.com", publicKey, privateKey);
 
 // HTTP Request POST field names
-const String field_type = "type";
 const String field_uuid = "uuid";
+const String field_type = "type";
 const String field_batt = "batt";
+const String field_board_id = "board_id";
 const String field_sensors[] = {"s0", "s1", "s2", "s3", "s4", 
                                 "s5", "s6", "s7", "s8", "s9"};
 
@@ -66,11 +71,14 @@ void setup() {
 }
 
 void loop() {
-  bool ready = readScanner();
+  while (scanner.available()) {
+    Serial.print(scanner.read());
+  }
+  // bool ready = readScanner();
 
   // If current time is UPDATE_RATE milliseconds greater than
   // the last update rate, send new data.
-  if (ready && millis() > (lastUpdate + UPDATE_RATE)) {
+  if (millis() > (lastUpdate + UPDATE_RATE)) {
     Serial.print("\nSending update...");
     if (sendData()) {
       Serial.println(" SUCCESS!");
@@ -130,8 +138,9 @@ bool readScanner() {
 // *****************************************************************************
 
 void updatePhant() {
+  phant.add(field_uuid, UUID);
   phant.add(field_type, data.board_type);
-  phant.add(field_uuid, data.board_uuid);
+  phant.add(field_board_id, data.board_uuid);
 
   for (size_t i = 0; i < NUM_SENSORS[data.board_type]; i++) {
     phant.add(field_sensors[i], data.sensors[i]);
@@ -144,14 +153,18 @@ void updatePhant() {
   phant.add(field_batt, data.batt);
 }
 
-int sendData() {
+bool sendData() {
   xbee.flush();
   xbee.readString();
 
-  if (!valid_data)
-    return -1;
+  // if (!valid_data)
+  //   return false;
 
   updatePhant();
+
+  // Serial.println();
+  // Serial.println(phant.post());
+  // return false;
 
   xbee.print(phant.post());
 
@@ -173,7 +186,7 @@ int sendData() {
     }
   }
   else // Otherwise timeout, no response from server
-    return -1;
+    return false;
 }
 
 /////////////////////////////////////////////////////////////////////////////////
