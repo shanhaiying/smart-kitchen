@@ -68,14 +68,15 @@ void printData() {
   Serial.println();
 }
 
-const String WRAP = {0xFF,0x00,0xFE,0x01,0xFD, 0x02};
+const size_t WRAP_LEN = 6;
+const char WRAP[WRAP_LEN] = {0xFF,0x00,0xFE,0x01,0xFD, 0x02};
 
 void serializeData() {
   if (!valid_data)
     return;
 
-  for (size_t i = 0; i < WRAP.length(); i++) {
-    Serial.print(WRAP[i])
+  for (size_t i = 0; i < WRAP_LEN; i++) {
+    Serial.print(WRAP[i]);
   }
 
   const uint8_t* iterator = (uint8_t*) &data;
@@ -83,7 +84,7 @@ void serializeData() {
     Serial.print(iterator[i]);
   }
 
-  for (size_t i = WRAP.length() - 1; i >= 0; i--) {
+  for (size_t i = WRAP_LEN - 1; i >= 0; i--) {
     Serial.print(WRAP[i]);
   }
 }
@@ -97,7 +98,7 @@ bool valid(int checksum) {
   sum += data.board_type;
   sum += data.board_uuid;
   sum += data.batt;
-  for (size_t i = 0; i < data.num_sensors; i++) {
+  for (size_t i = 0; i < NUM_SENSORS[data.board_type]; i++) {
     sum += data.sensors[i];
   }
   return sum == checksum;
@@ -139,8 +140,7 @@ void scanCallback(const Gap::AdvertisementCallbackParams_t *params) {
   data.board_type = params->advertisingData[idx++];
   data.board_uuid = params->advertisingData[idx++];
 
-  data.num_sensors = NUM_SENSORS[data.board_type];
-  for (size_t i = 0; i < data.num_sensors; i++) {
+  for (size_t i = 0; i < NUM_SENSORS[data.board_type]; i++) {
     data.sensors[i] = params->advertisingData[idx];
     idx++;
   }

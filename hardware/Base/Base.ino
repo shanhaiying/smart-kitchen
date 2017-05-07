@@ -1,9 +1,11 @@
 #include <SoftwareSerial.h>
 #include <Phant.h>
 
+typedef unsigned int uint;
+
 #define DEBUG FALSE
 
-const int COMMAND_TIMEOUT = 3000  // ms
+const int COMMAND_TIMEOUT = 3000;  // ms
 const int STARTUP_DELAY = 5000;
 const int SERIAL_BAUD = 9600;
 
@@ -82,20 +84,21 @@ void loop() {
   delay(2000);
 }
 
-const String WRAP = {0xFF,0x00,0xFE,0x01,0xFD, 0x02};
+const size_t WRAP_LEN = 6;
+const char WRAP[WRAP_LEN] = {0xFF,0x00,0xFE,0x01,0xFD, 0x02};
 size_t verify_idx = 0;
-typedef enum scanningStep {PRE, MAIN, POST};
-enum scanningStep currentScanStep = PRE;
+typedef enum ScanningStep {PRE, MAIN, POST};
+enum ScanningStep currentScanStep = PRE;
 
 bool readScanner() {
-  switch (scanningStep) {
+  switch (currentScanStep) {
     case PRE:
       if (scanner.read() != WRAP[verify_idx]) {
         verify_idx = 0;
       }
-      if (verify_idx == WRAP.length() - 1) {
-        verify_idx = WRAP.length() - 1;
-        scanningStep= MAIN;
+      if (verify_idx == WRAP_LEN - 1) {
+        verify_idx = WRAP_LEN - 1;
+        currentScanStep= MAIN;
       } else {
         verify_idx++;
       }
@@ -119,6 +122,7 @@ bool readScanner() {
       verify_idx--;
       return false;
   }
+  return false;
 }
 
 // *****************************************************************************
@@ -129,11 +133,11 @@ void updatePhant() {
   phant.add(field_type, data.board_type);
   phant.add(field_uuid, data.board_uuid);
 
-  for (size_t i = 0; i < data.num_sensors; i++) {
+  for (size_t i = 0; i < NUM_SENSORS[data.board_type]; i++) {
     phant.add(field_sensors[i], data.sensors[i]);
   }
 
-  for (size_t i = data.num_sensors; i < MAX_SENSORS; i++) {
+  for (size_t i = NUM_SENSORS[data.board_type]; i < MAX_SENSORS; i++) {
     phant.add(field_sensors[i], "None");
   }
 
@@ -144,7 +148,7 @@ int sendData() {
   xbee.flush();
   xbee.readString();
 
-  if (!data.valid)
+  if (!valid_data)
     return -1;
 
   updatePhant();
