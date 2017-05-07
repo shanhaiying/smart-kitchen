@@ -8,7 +8,7 @@ typedef unsigned int uint;
 #define ACTIVE_SCANNING false
 
 typedef enum board_t {FRIDGE, OVEN};
-static const uint8_t NUM_SENSORS[] = {4, 1};
+static const uint8_t NUM_SENSORS[] = {3, 1};
 // NOTE: NUM_SENSORS is mapped by board_t
 
 static const uint NUM_BYTES = 26;
@@ -16,12 +16,13 @@ static const uint START_INDEX = 5;
 static const uint8_t HASH[] = {69,1,255,1,69}; 
 static const size_t HASH_LEN = 5;
 
-struct data {
+struct {
   bool valid;
   uint8_t board_type;
   uint8_t board_uuid;
   uint8_t sensors[10];
   uint num_sensors;
+  uint8_t batt;
 } data;
 
 BLE ble;
@@ -54,7 +55,7 @@ uint32_t ble_advdata_decode(uint8_t type, uint8_t advdata_len, uint8_t *p_advdat
   return NRF_ERROR_NOT_FOUND;
 }
 
-void print_data() {
+void printData() {
   Serial.print("Board Type: ");
   Serial.println(data.board_type);
   Serial.print("Board uuid: ");
@@ -92,13 +93,12 @@ bool valid(int checksum) {
  *                       params->advertisingDataLen  Length of the advertisement data
  *                       params->advertisingData     Pointer to the advertisement packet's data
  */
-void scan_callback(const Gap::AdvertisementCallbackParams_t *params) {
+void scanCallback(const Gap::AdvertisementCallbackParams_t *params) {
   data.valid = false;
   uint8_t len;
   uint8_t adv_name[31];
 
-  // TODO - change to ADV_NON_CONNECTABLE_UNDIRECTED
-  if (params->type != GapAdvertisingParams::ADV_CONNECTABLE_UNDIRECTED)
+  if (params->type != GapAdvertisingParams::ADV_NON_CONNECTABLE_UNDIRECTED)
     return;
   if (NRF_SUCCESS != ble_advdata_decode(BLE_GAP_AD_TYPE_MANUFACTURER_SPECIFIC_DATA,
                                          params->advertisingDataLen,
@@ -124,6 +124,8 @@ void scan_callback(const Gap::AdvertisementCallbackParams_t *params) {
     idx++;
   }
 
+  data.batt = params->advertisingData[idx++];
+
   for (size_t i = 0; i < HASH_LEN; i++) {
     if (params->advertisingData[idx] != HASH[i]) {
       return;
@@ -137,7 +139,7 @@ void scan_callback(const Gap::AdvertisementCallbackParams_t *params) {
     return;
 
   data.valid = true;
-  print_data();
+  printData();
 }
 
 void setup() {
@@ -146,7 +148,7 @@ void setup() {
   ble.setScanParams(SCAN_INTERVAL, SCAN_WINDOW, TIMEOUT, ACTIVE_SCANNING);
   ble.setActiveScan(ACTIVE_SCANNING);
   data.valid = false;
-  ble.startScan(scan_callback);
+  ble.startScan(scanCallback);
   Serial.println("Started scanning!!!");
 }
 

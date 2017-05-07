@@ -20,6 +20,13 @@ static const float BATT_NORMALIZER = 3.3;
 static const uint TEMP_NORMALIZER = 500,
                   PRES_NORMALIZER = 1023;
 
+// Sensors.
+static const int REED_PIN = D1;
+static const int FSR_PIN  = A3;
+static const int VBAT_PIN = A4;
+TMP102 temp_sensor(0x48);
+
+
 ////// UPDATE PER BOARD //////////
 
 const enum board_t BOARD_TYPE = FRIDGE;
@@ -77,8 +84,9 @@ void update_data_packet_fridge(float temp, int pres, float batt, bool reed) {
 
   AdvData[counter++] = normalized_temp;
   AdvData[counter++] = normalized_pres;
-  AdvData[counter++] = normalized_batt;
   AdvData[counter++] = normalized_reed;
+
+  AdvData[counter++] = normalized_batt;
 
   // Set end hash.
   for (size_t i = 0; i < HASH_LEN; i++) {
@@ -93,6 +101,16 @@ void update_data_packet_fridge(float temp, int pres, float batt, bool reed) {
 
   // Compute checksum.
   AdvData[NUM_BYTES-1] = checksum8(AdvData, NUM_BYTES-1);
+}
+
+void read_sensors(float* temp, int* pressure, bool* reed, float* batt) {
+  temp_sensor.wakeup();
+  *temp = temp_sensor.readTempF();
+  temp_sensor.sleep();
+
+  *pressure = analogRead(FSR_PIN);
+  *batt     = analogRead(VBAT_PIN);
+  *reed     = (bool) digitalRead(REED_PIN);
 }
 
 void send_advertisement() {
@@ -110,6 +128,11 @@ void send_advertisement() {
 
   switch (BOARD_TYPE) {
     case FRIDGE:
+      // float temp;
+      // int pressure;
+      // bool reed;
+      // float batt;
+      // read_sensors(&temp, &pressure, &reed, &batt);
       update_data_packet_fridge(temp, pressure, batt, reed);
       break;
 
