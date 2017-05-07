@@ -30,14 +30,14 @@ const String field_batt = "batt";
 const String field_sensors[] = {"s0", "s1", "s2", "s3", "s4", 
                                 "s5", "s6", "s7", "s8", "s9"};
 
+const uint8_t NUM_SENSORS[] = {3, 1};
 const uint MAX_SENSORS = 10;
 
+bool valid_data = false;
 struct {
-  bool valid;
   uint8_t board_type;
   uint8_t board_uuid;
   uint8_t sensors[MAX_SENSORS];
-  uint num_sensors;
   uint8_t batt;
 } data;
 
@@ -47,7 +47,7 @@ const unsigned long UPDATE_RATE = 15000;  // ms
 unsigned long lastUpdate        = 0;     // Keep track of last update time
 
 void setup() {
-  delay(STARTUP_DELAY); 
+  delay(STARTUP_DELAY);
 
   // Set up serial ports:
   Serial.begin(SERIAL_BAUD);
@@ -64,9 +64,11 @@ void setup() {
 }
 
 void loop() {
+  bool ready = readScanner();
+
   // If current time is UPDATE_RATE milliseconds greater than
   // the last update rate, send new data.
-  if (millis() > (lastUpdate + UPDATE_RATE)) {
+  if (ready && millis() > (lastUpdate + UPDATE_RATE)) {
     Serial.print("\nSending update...");
     if (sendData()) {
       Serial.println(" SUCCESS!");
@@ -80,6 +82,44 @@ void loop() {
   delay(2000);
 }
 
+const String WRAP = {0xFF,0x00,0xFE,0x01,0xFD, 0x02};
+size_t verify_idx = 0;
+typedef enum scanningStep {PRE, MAIN, POST};
+enum scanningStep currentScanStep = PRE;
+
+bool readScanner() {
+  switch (scanningStep) {
+    case PRE:
+      if (scanner.read() != WRAP[verify_idx]) {
+        verify_idx = 0;
+      }
+      if (verify_idx == WRAP.length() - 1) {
+        verify_idx = WRAP.length() - 1;
+        scanningStep= MAIN;
+      } else {
+        verify_idx++;
+      }
+      return false;
+
+    case MAIN:
+      scanner.readBytes((uint8_t*) &data, sizeof(data));
+      currentScanStep = POST;
+      return false;
+
+    case POST:
+      if (scanner.read() != WRAP[verify_idx]) {
+        verify_idx = 0;
+        return false;
+      }
+      if (verify_idx < 0) {
+        verify_idx = 0;
+        currentScanStep = PRE;
+        return true;
+      }
+      verify_idx--;
+      return false;
+  }
+}
 
 // *****************************************************************************
 // ****  FUNCTIONS     *********************************************************

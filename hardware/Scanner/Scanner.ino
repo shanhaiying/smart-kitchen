@@ -17,12 +17,11 @@ static const uint START_INDEX = 5;
 static const uint8_t HASH[] = {69,1,255,1,69}; 
 static const size_t HASH_LEN = 5;
 
+bool valid_data = false;
 struct {
-  bool valid;
   uint8_t board_type;
   uint8_t board_uuid;
   uint8_t sensors[MAX_SENSORS];
-  uint num_sensors;
   uint8_t batt;
 } data;
 
@@ -62,37 +61,31 @@ void printData() {
   Serial.print("Board uuid: ");
   Serial.println(data.board_uuid);
   Serial.println("Sensor values: ");
-  for (size_t i = 0; i < data.num_sensors; i++) {
+  for (size_t i = 0; i < NUM_SENSORS[data.board_type]; i++) {
     Serial.print(data.sensors[i]);
     Serial.print(" ");
   }
   Serial.println();
 }
 
-void padAndPrint(const String s) {
-  Serial.print(0xFF);
-  Serial.print(0xFF);
-  Serial.print(0x00);
-  Serial.print(0x00);
-  Serial.print(s);
-  Serial.print(0x00);
-  Serial.print(0x00);
-  Serial.print(0xFF);
-  Serial.print(0xFF);
-}
+const String WRAP = {0xFF,0x00,0xFE,0x01,0xFD, 0x02};
 
 void serializeData() {
-  if (!data.valid)
+  if (!valid_data)
     return;
 
-  padAndPrint("BEGIN");
-  Serial.print(data.board_type);
-  Serial.print(data.board_uuid);
-  for (size_t i = 0; i < data.num_sensors; i++) {
-    Serial.print(data.sensors[i]);
+  for (size_t i = 0; i < WRAP.length(); i++) {
+    Serial.print(WRAP[i])
   }
-  Serial.print(data.batt);  
-  padAndPrint("FINISH");
+
+  const uint8_t* iterator = (uint8_t*) &data;
+  for (size_t i = 0; i < sizeof(data); i++) {
+    Serial.print(iterator[i]);
+  }
+
+  for (size_t i = WRAP.length() - 1; i >= 0; i--) {
+    Serial.print(WRAP[i]);
+  }
 }
 
 bool valid(int checksum) {
@@ -122,7 +115,7 @@ bool valid(int checksum) {
  *                       params->advertisingData     Pointer to the advertisement packet's data
  */
 void scanCallback(const Gap::AdvertisementCallbackParams_t *params) {
-  data.valid = false;
+  valid_data = false;
   uint8_t len;
   uint8_t adv_name[31];
 
@@ -166,8 +159,8 @@ void scanCallback(const Gap::AdvertisementCallbackParams_t *params) {
   if (!valid(checksum))
     return;
 
-  data.valid = true;
-  printData();
+  valid_data = true;
+  serializeData();
 }
 
 void setup() {
@@ -175,7 +168,6 @@ void setup() {
   ble.init();
   ble.setScanParams(SCAN_INTERVAL, SCAN_WINDOW, TIMEOUT, ACTIVE_SCANNING);
   ble.setActiveScan(ACTIVE_SCANNING);
-  data.valid = false;
   ble.startScan(scanCallback);
   Serial.println("Started scanning!!!");
 }
