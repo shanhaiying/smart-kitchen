@@ -30,7 +30,7 @@ TMP102 temp_sensor(0x48);
 ////// UPDATE PER BOARD //////////
 
 const enum board_t BOARD_TYPE = FRIDGE;
-const uint8_t BOARD_UID  = 0;
+const uint8_t BOARD_UID  = 0x40;
 
 //////////////////////////////////
 

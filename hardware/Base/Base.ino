@@ -8,13 +8,12 @@ typedef unsigned int uint;
 ////////////// PER USER /////////////////
 static const uint8_t UUID = 23;
 /////////////////////////////////////////
+const int BAUD = 9600;
 
 const int COMMAND_TIMEOUT = 3000;  // ms
 const int STARTUP_DELAY = 5000;
-const int SERIAL_BAUD = 9600;
 
 // Xbee globals.
-const int  XBEE_BAUD = 9600;
 const byte XBEE_RX = 2;
 const byte XBEE_TX = 3;
 SoftwareSerial xbee(XBEE_RX, XBEE_TX); 
@@ -24,10 +23,10 @@ const byte BLE_TX = 5;
 SoftwareSerial scanner(BLE_RX, BLE_TX);
 
 // Phant globals.
-const String destIP = "54.86.132.254";     // data.sparkfun.com's IP address
+const String destIP = "54.86.132.254";     // packet.sparkfun.com's IP address
 const String publicKey = "YDdNyD6Wymf9ayKlrDR3";
 const String privateKey = "RnB7GnXWG6S0ZkAwDM8B";
-Phant phant("data.sparkfun.com", publicKey, privateKey);
+Phant phant("packet.sparkfun.com", publicKey, privateKey);
 
 // HTTP Request POST field names
 const String field_uuid = "uuid";
@@ -46,7 +45,7 @@ struct {
   uint8_t board_uuid;
   uint8_t sensors[MAX_SENSORS];
   uint8_t batt;
-} data;
+} packet;
 
 // Phant limits you to 10 seconds between posts. Use this variable
 // to limit the update rate (in milliseconds):
@@ -57,80 +56,102 @@ void setup() {
   delay(STARTUP_DELAY);
 
   // Set up serial ports:
-  Serial.begin(SERIAL_BAUD);
-  xbee.begin(XBEE_BAUD);
+  Serial.begin(BAUD);
+  scanner.begin(BAUD);
+  xbee.begin(BAUD);
+
+  xbee.listen();
 
   // Set up WiFi network
-  Serial.println("Verifying network...");
   connectWiFi();
-  Serial.println("Verified!");
-  // TODO - maybe print network name
+  Serial.println("Verified network connection!");
   setupHTTP(destIP);
 
   delay(STARTUP_DELAY);
 }
 
+char myChar;
+uint8_t data_buffer[26];
+
 void loop() {
-  while (scanner.available()) {
-    Serial.print(scanner.read());
+  scanner.listen();
+  bool ready = false;
+  while(scanner.available()){
+    ready = readScanner();
   }
-  // bool ready = readScanner();
 
   // If current time is UPDATE_RATE milliseconds greater than
-  // the last update rate, send new data.
-  if (millis() > (lastUpdate + UPDATE_RATE)) {
-    Serial.print("\nSending update...");
-    if (sendData()) {
-      Serial.println(" SUCCESS!");
-    } else {
-      Serial.println(" Failed :(");
-    }
-    lastUpdate = millis();
-  }
-  Serial.print(".");
+  // the last update rate, send new packet.
+  if (!ready || millis() <= (lastUpdate + UPDATE_RATE))
+    return;
 
-  delay(2000);
+  xbee.listen();
+
+  if (sendData()) {
+    Serial.println("Update succeeded!");
+  } else {
+    Serial.println("Failed :-(");
+  }
+
+  lastUpdate = millis();
 }
 
-const size_t WRAP_LEN = 6;
-const char WRAP[WRAP_LEN] = {0xFF,0x00,0xFE,0x01,0xFD, 0x02};
-size_t verify_idx = 0;
-typedef enum ScanningStep {PRE, MAIN, POST};
-enum ScanningStep currentScanStep = PRE;
+const uint MAX_DATA_BUFFER_LEN = 3*sizeof(packet) + 1;
+uint8_t scannedDataBuffer[MAX_DATA_BUFFER_LEN];
+const uint8_t DATA_TERMINATOR = 0xFF;
+size_t scannedDataIdx = 0;
+bool waitingForNullTerminator = true;
 
 bool readScanner() {
-  switch (currentScanStep) {
-    case PRE:
-      if (scanner.read() != WRAP[verify_idx]) {
-        verify_idx = 0;
-      }
-      if (verify_idx == WRAP_LEN - 1) {
-        verify_idx = WRAP_LEN - 1;
-        currentScanStep= MAIN;
-      } else {
-        verify_idx++;
-      }
-      return false;
 
-    case MAIN:
-      scanner.readBytes((uint8_t*) &data, sizeof(data));
-      currentScanStep = POST;
-      return false;
+  // Read in a char from the software serial channel.
+  scannedDataBuffer[scannedDataIdx++] = scanner.read();
 
-    case POST:
-      if (scanner.read() != WRAP[verify_idx]) {
-        verify_idx = 0;
-        return false;
-      }
-      if (verify_idx < 0) {
-        verify_idx = 0;
-        currentScanStep = PRE;
-        return true;
-      }
-      verify_idx--;
-      return false;
+  // Just buffer if not end of sequence.
+  if (scannedDataBuffer[scannedDataIdx-1] != DATA_TERMINATOR) {
+    if (scannedDataIdx >= MAX_DATA_BUFFER_LEN) {
+      scannedDataIdx = 0;
+      waitingForNullTerminator = true;
+    }
+    return false;
   }
-  return false;
+
+  // Reset if waiting.
+  if (waitingForNullTerminator) {
+    scannedDataIdx = 0;
+    waitingForNullTerminator = false;
+    return false;
+  }
+
+  // If we pass all those checks.
+  deserializeScannedData();
+  printPacket();
+  scannedDataIdx = 0;
+  return true;
+}
+
+void deserializeScannedData() {
+  uint8_t* mutator = (uint8_t*) &packet;
+  for (size_t i = 0; i < sizeof(packet); i++) {
+    uint8_t decimal = scannedDataBuffer[i * 3] - '0';
+    for (size_t j = 1; j < 3; j++) {
+      decimal = decimal * 10 + (scannedDataBuffer[i * 3 + j] - '0');
+    }
+    mutator[i] = decimal;
+  }
+}
+
+void printPacket() {
+  Serial.print("Board Type: ");
+  Serial.println(packet.board_type);
+  Serial.print("Board uuid: ");
+  Serial.println(packet.board_uuid);
+  Serial.println("Sensor values: ");
+  for (size_t i = 0; i < NUM_SENSORS[packet.board_type]; i++) {
+    Serial.print(packet.sensors[i]);
+    Serial.print(" ");
+  }
+  Serial.println();
 }
 
 // *****************************************************************************
@@ -139,18 +160,18 @@ bool readScanner() {
 
 void updatePhant() {
   phant.add(field_uuid, UUID);
-  phant.add(field_type, data.board_type);
-  phant.add(field_board_id, data.board_uuid);
+  phant.add(field_type, packet.board_type);
+  phant.add(field_board_id, packet.board_uuid);
 
-  for (size_t i = 0; i < NUM_SENSORS[data.board_type]; i++) {
-    phant.add(field_sensors[i], data.sensors[i]);
+  for (size_t i = 0; i < NUM_SENSORS[packet.board_type]; i++) {
+    phant.add(field_sensors[i], packet.sensors[i]);
   }
 
-  for (size_t i = NUM_SENSORS[data.board_type]; i < MAX_SENSORS; i++) {
+  for (size_t i = NUM_SENSORS[packet.board_type]; i < MAX_SENSORS; i++) {
     phant.add(field_sensors[i], "None");
   }
 
-  phant.add(field_batt, data.batt);
+  phant.add(field_batt, packet.batt);
 }
 
 bool sendData() {
@@ -193,8 +214,8 @@ bool sendData() {
 // xbeeee WiFi Setup Stuff //
 /////////////////////////////////////////////////////////////////////////////////
 // setupHTTP() sets three important parameters on the xbeeee:
-// 1. Destination IP -- This is the IP address of the server we want to send data to.
-// 2. Destination Port -- We'll be sending data over port 80. The standard HTTP port a server listens to.
+// 1. Destination IP -- This is the IP address of the server we want to send packet to.
+// 2. Destination Port -- We'll be sending packet over port 80. The standard HTTP port a server listens to.
 // 3. IP protocol -- We'll be using TCP (instead of default UDP).
 
 void setupHTTP(String address) {
@@ -215,7 +236,7 @@ void printIP() {
   while (!commandMode(1))
     ;
 
-  // Get rid of any data that may have already been in the
+  // Get rid of any packet that may have already been in the
   // serial receive buffer:
   xbee.flush();
   // Send the ATMY command. Should at least respond with "0.0.0.0\r" (7 characters):

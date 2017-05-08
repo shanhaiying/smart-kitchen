@@ -38,7 +38,7 @@ BLE ble;
  *
  * @return NRF_SUCCESS or NRF_ERROR_NOT_FOUND
  */
-uint32_t ble_advdata_decode(uint8_t type, uint8_t advdata_len, uint8_t *p_advdata, uint8_t *len, uint8_t *p_field_data) {
+uint32_t bleAdvDataDecode(uint8_t type, uint8_t advdata_len, uint8_t *p_advdata, uint8_t *len, uint8_t *p_field_data) {
   uint8_t index=0;
   uint8_t field_length, field_type;
 
@@ -69,24 +69,22 @@ void printData() {
 }
 
 const size_t WRAP_LEN = 6;
-const char WRAP[WRAP_LEN] = {0xFF,0x00,0xFE,0x01,0xFD, 0x02};
+const uint8_t WRAP[WRAP_LEN] = {0xFF,0x00,0xFE,0x01,0xFD, 0x02};
 
 void serializeData() {
   if (!valid_data)
     return;
 
-  for (size_t i = 0; i < WRAP_LEN; i++) {
-    Serial.print(WRAP[i]);
-  }
-
   const uint8_t* iterator = (uint8_t*) &data;
   for (size_t i = 0; i < sizeof(data); i++) {
-    Serial.print(iterator[i]);
+    char buf [4];
+    sprintf (buf, "%03i", iterator[i]);
+    for (size_t j = 0; j < 4 && buf[j] != '\0'; j++) {
+      Serial.write(buf[j]);
+    }
   }
 
-  for (size_t i = WRAP_LEN - 1; i >= 0; i--) {
-    Serial.print(WRAP[i]);
-  }
+  Serial.write((byte)0xFF);
 }
 
 bool valid(int checksum) {
@@ -122,7 +120,7 @@ void scanCallback(const Gap::AdvertisementCallbackParams_t *params) {
 
   if (params->type != GapAdvertisingParams::ADV_CONNECTABLE_UNDIRECTED)
     return;
-  if (NRF_SUCCESS != ble_advdata_decode(BLE_GAP_AD_TYPE_MANUFACTURER_SPECIFIC_DATA,
+  if (NRF_SUCCESS != bleAdvDataDecode(BLE_GAP_AD_TYPE_MANUFACTURER_SPECIFIC_DATA,
                                          params->advertisingDataLen,
                                          (uint8_t*) params->advertisingData, &len, adv_name))
   {
@@ -169,7 +167,7 @@ void setup() {
   ble.setScanParams(SCAN_INTERVAL, SCAN_WINDOW, TIMEOUT, ACTIVE_SCANNING);
   ble.setActiveScan(ACTIVE_SCANNING);
   ble.startScan(scanCallback);
-  Serial.println("Started scanning!!!");
+  // Serial.println("Started scanning!!!");
 }
 
 void loop() {
