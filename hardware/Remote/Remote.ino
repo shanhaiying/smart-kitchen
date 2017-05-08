@@ -121,18 +121,18 @@ void send_advertisement() {
     initialized = true;
   }
 
-  float temp = 80.89;
-  int pressure = 987;
-  bool reed = true;
-  float batt = 3.13;
+  //float temp = 80.89;
+  //int pressure = 987;
+  //bool reed = true;
+  //float batt = 3.13;
 
   switch (BOARD_TYPE) {
     case FRIDGE:
-      // float temp;
-      // int pressure;
-      // bool reed;
-      // float batt;
-      // read_sensors(&temp, &pressure, &reed, &batt);
+      float temp;
+      int pressure;
+      bool reed;
+      float batt;
+      read_sensors(&temp, &pressure, &reed, &batt);
       update_data_packet_fridge(temp, pressure, batt, reed);
       break;
 
