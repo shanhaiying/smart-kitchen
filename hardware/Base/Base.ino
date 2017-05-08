@@ -12,7 +12,7 @@ const int BAUD = 9600;
 
 const int COMMAND_TIMEOUT = 3000;  // ms
 const int STARTUP_DELAY = 5000;
-
+ 
 // Xbee globals.
 const byte XBEE_RX = 2;
 const byte XBEE_TX = 3;
@@ -23,10 +23,17 @@ const byte BLE_TX = 5;
 SoftwareSerial scanner(BLE_RX, BLE_TX);
 
 // Phant globals.
-const String destIP = "54.86.132.254";     // packet.sparkfun.com's IP address
-const String publicKey = "YDdNyD6Wymf9ayKlrDR3";
-const String privateKey = "RnB7GnXWG6S0ZkAwDM8B";
-Phant phant("packet.sparkfun.com", publicKey, privateKey);
+// const String destIP = "54.86.132.254";     // packet.sparkfun.com's IP address
+// const String publicKey = "YDdNyD6Wymf9ayKlrDR3";
+// const String privateKey = "RnB7GnXWG6S0ZkAwDM8B";
+
+// Amazon ec2 acting as reverse proxy for Heroku App
+const String domain = "ec2-52-55-175-106.compute-1.amazonaws.com";
+const String destIP = "52.55.175.106";
+const String endPoint = "countme/bitch";
+const String privateKey = "";
+const String file = "";
+Phant phant(domain, endPoint, privateKey, file);
 
 // HTTP Request POST field names
 const String field_uuid = "uuid";
