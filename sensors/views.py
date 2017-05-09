@@ -8,41 +8,50 @@ from django.core.exceptions import ObjectDoesNotExist
 class FormError(KeyError):
     pass
 
-
 @csrf_exempt
 def input_data(request):
     if request.method != 'POST':
         return HttpResponseNotAllowed(['POST'])
     form = {k: v for k, v in request.POST.items()}
+    datapoints = []
     try:
         datum = {}
-        datum['profile'] = form.pop('uuid')
-        datum['board'] = form.pop('board_id')
+        datum['profile'] = int(form.pop('uuid'))
+        datum['board'] = int(form.pop('board_id'))
         for param, value in form.items():
-            datum['index'] = Sensor.PARAM_TO_INDEX[value]
-            create_datum(datum)
+            if eval(value) is not None:
+                datum['index'] = Sensor.PARAM_TO_INDEX[param]
+                datum['value'] = value
+                datapoints.append(create_datum(datum))
     except FormError as e:
+        print(e)
         return HttpResponseBadRequest()
-    except KeyError:
+    except KeyError as e:
+        print(e)
         return HttpResponseBadRequest('Missing some form data')
     except:
         return HttpResponseBadRequest("Invalid format, talk to Michael")
+    return HttpResponse('Created datapoints: {}'.format(datapoints))
 
 
 def create_datum(datum):
     try:
-        profile = Profile.objects.get(uuid=int(datum.pop('profile')))
-        board = Board.objects.get(profile=profile, uid=int(datum.pop('board')))
-        sensor = Sensor.objects.get(board=board, index=int(datum.pop('index')))
-    except:
+        profile = Profile.objects.get(uuid=int(datum['profile']))
+        board = Board.objects.get(profile=profile, uid=int(datum['board']))
+        print(datum.get('index'))
+        sensor = Sensor.objects.get(board=board, index=int(datum['index']))
+    except Exception as e:
+        print('EXCEPTION', e)
         raise FormError("Invalid datum: missing profile, board, or index (as int)")
     try:
-        raw_data, created = RawData.objects.update_or_create(sensor=sensor,
-                                                             datum=float(datum.pop('value')),
-                                                             **datum)
-    except:
+        raw_data = RawData.objects.create(sensor=sensor,
+                                                             datum=float(datum.pop('value')))
+    except Exception as e:
+        print(e)
         raise FormError('Invalid form, need "data" as float or None')
+    # print('CREATED', created)
     raw_data.save()
+    return raw_data
 
 
 @csrf_exempt

@@ -54,9 +54,9 @@ class Sensor(models.Model):
 class RawData(models.Model):
     NOT_AVAILABLE = -1
 
-    created = models.DateTimeField(auto_now_add=True, db_index=True)
+    created = models.DateTimeField(auto_now_add=True)#, db_index=True)
     sensor = models.ForeignKey(Sensor, related_name='rawdata', on_delete=models.CASCADE)
     datum = models.FloatField(default=NOT_AVAILABLE)
 
     def __str__(self):
-        return '{} {}'.format(created, datum)
+        return '{} {}'.format(self.created, self.datum)
