@@ -26,6 +26,7 @@ ADMINS = (
 )
 
 # AUTH_USER_MODEL = 'users.User'
+# AUTH_PROFILE_MODULE = 'users.Profile'
 
 ALLOWED_HOSTS = []
 
