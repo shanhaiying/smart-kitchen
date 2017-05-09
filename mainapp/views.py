@@ -4,20 +4,20 @@ from django.shortcuts import render  # noqa
 from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseBadRequest, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+def input_(request):
+    pass
+
 def pong(request):
-    print('PING')
+    print('Recieved: PING')
     return HttpResponse('PONG')
 
-
 def login(request):
-    go = {}
-    if request.method == 'POST':
-        go = request.POST.get('go')
-    elif request.method == 'GET':
-        go = request.GET.get('go')
-    else:
-        return HttpResponseNotAllowed(['GET', 'POST'])
-    if go is None:
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+    try:
+        username = request.POST['username']
+        password = request.POST['password']
+    except ValueError:
         return HttpResponseBadRequest()
     try:
         go = eval(go)

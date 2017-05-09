@@ -6,23 +6,15 @@ from common.models import IndexedTimeStampedModel
 
 from .managers import UserManager
 
-
-class Datum(models.Model):
-    value = models.DecimalField(decimal_places=2, max_digits=10)
-    timestamp = models.DateTimeField()
-
-
-class Sensor(models.Model):
-    kind = models.CharField(max_length=20, default='any')
-    uid = models.IntegerField()
-    data = models.ManyToManyField(Datum)
+from sensors.models import Sensor
 
 
 class User(AbstractBaseUser, PermissionsMixin, IndexedTimeStampedModel):
-    uid = models.IntegerField(unique=True, default=0)
+    uuid = models.IntegerField(unique=True, default=0)
+    name = models.CharField(max_length=255)
+    email = models.EmailField(max_length=255, unique=True)
     sensors = models.ManyToManyField(Sensor)
 
-    email = models.EmailField(max_length=255, unique=True)
     is_staff = models.BooleanField(
         default=False,
         help_text=_('Designates whether the user can log into this admin '
@@ -33,14 +25,7 @@ class User(AbstractBaseUser, PermissionsMixin, IndexedTimeStampedModel):
                     'active. Unselect this instead of deleting accounts.'))
 
     objects = UserManager()
-
     USERNAME_FIELD = 'email'
 
-    def get_full_name(self):
-        return self.email
-
-    def get_short_name(self):
-        return self.email
-
     def __str__(self):
-        return 'User: {}; email: {}'.format(self.uid, self.email)
+        return 'UUID: {}; name: {}; email: {}'.format(self.uid, self.name, self.email)

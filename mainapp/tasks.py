@@ -28,11 +28,11 @@ URL = 'https://data.sparkfun.com'
 PUBLIC_KEY = 'YDdNyD6Wymf9ayKlrDR3'
 PRIVATE_KEY = 'RnB7GnXWG6S0ZkAwDM8B'
 
-@periodic_task(
-    run_every=(crontab(minute='*/1')),
-    name="sparky",
-    ignore_result=True
-)
+# @periodic_task(
+#     run_every=(crontab(minute='*/1')),
+#     name="sparky",
+#     ignore_result=True
+# )
 def sparky():
     def download(url):
         last_time = time.gmtime(0)
