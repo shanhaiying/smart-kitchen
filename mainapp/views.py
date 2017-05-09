@@ -5,7 +5,13 @@ from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseBadReq
 from django.views.decorators.csrf import csrf_exempt
 
 def input_(request):
-    pass
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+    try:
+        username = request.POST['username']
+        password = request.POST['password']
+    except ValueError:
+        return HttpResponseBadRequest()
 
 def pong(request):
     print('Recieved: PING')
