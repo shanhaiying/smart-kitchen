@@ -3,12 +3,15 @@ from .base import *  # noqa
 
 SECRET_KEY = 'test'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': base_dir_join('db.sqlite3'),
-    }
-}
+import dj_database_url
+DATABASES['default'] =  dj_database_url.config()
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': base_dir_join('db.sqlite3'),
+#     }
+# }
 
 STATIC_ROOT = 'staticfiles'
 STATIC_URL = '/static/'

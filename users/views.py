@@ -1,16 +1,12 @@
-from django.shortcuts import render  # noqa
-from django.http import HttpResponse
+from django.shortcuts import render
+from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseBadRequest, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from users.models import User
 
 
-# Create your views here.
-# def get_all_users(request):
-# 	print(request.method)
-# 	return HttpResponse(', '.join(map(str, User.objects.all())))
-
-
-def get_all_users(request):
-	if request.method == 'GET':
-		if 'email' in request.GET:
-			return HttpResponse(', '.join(map(str, User.objects.filter(email__contains=request.GET['email']))))
-		return HttpResponse(', '.join(map(str, User.objects.all())))
+def createuser(request):
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+    user = User.objects.createuser(request.POST.pop('username'), **request.POST)
+    user.save()
+    return 'Created user {}'.format(user)

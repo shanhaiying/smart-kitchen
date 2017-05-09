@@ -7,6 +7,7 @@ django-celery
 django-model-utils
 django-webpack-loader
 django.js-vinta
+django-timeseries
 python-decouple<=4.0
 psycopg2
 

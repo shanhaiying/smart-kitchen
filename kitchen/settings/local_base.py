@@ -9,11 +9,14 @@ SECRET_KEY = 'secret'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': base_dir_join('db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'kitchen',
+        'USER': 'kitchenuser',
+        'PASSWORD': 'password',
+        'HOST': 'localhost',
+        'PORT': '',
     }
 }
-
 STATIC_ROOT = 'staticfiles'
 STATIC_URL = '/static/'
 
