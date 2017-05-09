@@ -1,11 +1,31 @@
+from datetime import timedelta
 from django.db import models
-
-class Datum(models.Model):
-    value = models.DecimalField(decimal_places=2, max_digits=10)
-    timestamp = models.DateTimeField()
-
+from timeseries.utils import TimeSeriesModel, TimeSeriesManager
 
 class Sensor(models.Model):
-    kind = models.CharField(max_length=20, default='any')
+    TEMPERATURE = 'TEMP'
+    PRESSURE    = 'PRES'
+    REED        = 'REED'
+    BATTERY     = 'BATT'
+    KINDS_OF_SENSORS = (
+        (TEMPERATURE, 'Temperature'),
+        (PRESSURE, 'Pressure'),
+        (REED, 'Reed'),
+        (BATTERY, 'Batter'),
+    )
+    kind = models.CharField(max_length=255, choices=KINDS_OF_SENSORS)
     uid = models.IntegerField()
-    data = models.ManyToManyField(Datum)
+
+    objects = TimeSeriesManager()
+
+    def __str__(self):
+        return '{} {}'.format(self.uid, self.kind)
+
+class RawData(TimeSeriesModel):
+
+    TIMESERIES_INTERVAL = timedelta(seconds=1)
+
+    NOT_AVAILABLE = -1
+
+    sensor = models.ForeignKey(Sensor, related_name='rawdata')
+    datum = models.FloatField(default=NOT_AVAILABLE)
